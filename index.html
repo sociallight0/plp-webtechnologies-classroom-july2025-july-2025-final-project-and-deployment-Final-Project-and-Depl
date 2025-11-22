@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="MindSpace - A comprehensive mental health platform connecting users with licensed therapists. Track moods, book appointments, and improve your mental wellness.">
+  <meta name="keywords" content="mental health, therapy, counseling, mood tracking, appointments, therapists, wellness">
+  <title>MindSpace - Mental Health & Therapy Platform</title>
+  
+  <style>
+    /* CSS Variables - Green Palette */
+    :root {
+      --primary-green: #2D6A4F;
+      --secondary-green: #52B788;
+      --light-green: #B7E4C7;
+      --dark-green: #1B4332;
+      --accent-green: #95D5B2;
+      --white: #FFFFFF;
+      --light-gray: #F8F9FA;
+      --text-dark: #212529;
+      --text-light: #6C757D;
+      --shadow: rgba(45, 106, 79, 0.1);
+      --shadow-lg: rgba(45, 106, 79, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text-dark);
+      background: var(--white);
+    }
+
+    /* Header & Navigation */
+    .header {
+      background: var(--white);
+      box-shadow: 0 2px 10px var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+
+    .header.scrolled {
+      box-shadow: 0 4px 20px var(--shadow-lg);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-green);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      font-size: 2rem;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+      align-items: center;
+    }
+
+    .nav-menu a {
+      color: var(--text-dark);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+      font-size: 1rem;
+    }
+
+    .nav-menu a:hover {
+      color: var(--primary-green);
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      background: var(--primary-green);
+      color: var(--white);
+    }
+
+    .btn-primary:hover {
+      background: var(--dark-green);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--shadow-lg);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--primary-green);
+      border: 2px solid var(--primary-green);
+    }
+
+    .btn-outline:hover {
+      background: var(--primary-green);
+      color: var(--white);
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, var(--light-green) 0%, var(--accent-green) 100%);
+      padding: 6rem 2rem;
+      text-align: center;
+    }
+
+    .hero-content {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--dark-green);
+      line-height: 1.2;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    .hero-subtitle {
+      font-size: 1.5rem;
+      color: var(--primary-green);
+      margin-bottom: 1rem;
+      font-weight: 600;
+      animation: fadeInUp 1s ease;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-dark);
+      margin-bottom: 2.5rem;
+      line-height: 1.8;
+      animation: fadeInUp 1.2s ease;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 1.4s ease;
+    }
+
+    .btn-large {
+      padding: 1rem 2.5rem;
+      font-size: 1.2rem;
+      border-radius: 10px;
+    }
+
+    /* Stats Section */
+    .stats {
+      background: var(--white);
+      padding: 4rem 2rem;
+    }
+
+    .stats-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+      text-align: center;
+    }
+
+    .stat-item {
+      padding: 2rem;
+      border-radius: 12px;
+      background: var(--light-gray);
+      transition: transform 0.3s ease;
+    }
+
+    .stat-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px var(--shadow);
+    }
+
+    .stat-number {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--primary-green);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    /* Features Section */
+    .features {
+      background: var(--light-gray);
+      padding: 6rem 2rem;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-header h2 {
+      font-size: 3rem;
+      color: var(--primary-green);
+      margin-bottom: 1rem;
+    }
+
+    .section-header p {
+      font-size: 1.2rem;
+      color: var(--text-light);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2.5rem;
+    }
+
+    .feature-card {
+      background: var(--white);
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 5px 20px var(--shadow);
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 40px var(--shadow-lg);
+    }
+
+    .feature-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.5rem;
+      color: var(--primary-green);
+      margin-bottom: 1rem;
+    }
+
+    .feature-card p {
+      color: var(--text-light);
+      line-height: 1.7;
+    }
+
+    .feature-list {
+      list-style: none;
+      margin-top: 1rem;
+    }
+
+    .feature-list li {
+      padding: 0.5rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: var(--text-dark);
+    }
+
+    .feature-list li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--secondary-green);
+      font-weight: 700;
+    }
+
+    /* Specializations Section */
+    .specializations {
+      background: var(--white);
+      padding: 6rem 2rem;
+    }
+
+    .specializations-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .specialization-badge {
+      background: linear-gradient(135deg, var(--light-green), var(--accent-green));
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--dark-green);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .specialization-badge:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px var(--shadow-lg);
+    }
+
+    /* Technology Section */
+    .technology {
+      background: var(--dark-green);
+      color: var(--white);
+      padding: 6rem 2rem;
+    }
+
+    .technology .section-header h2,
+    .technology .section-header p {
+      color: var(--white);
+    }
+
+    .tech-grid {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .tech-item {
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .tech-item:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-5px);
+    }
+
+    .tech-item h4 {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent-green);
+    }
+
+    .tech-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: var(--secondary-green);
+      color: var(--white);
+      border-radius: 20px;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    /* CTA Section */
+    .cta {
+      background: linear-gradient(135deg, var(--secondary-green), var(--primary-green));
+      padding: 6rem 2rem;
+      text-align: center;
+      color: var(--white);
+    }
+
+    .cta h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .cta p {
+      font-size: 1.3rem;
+      margin-bottom: 2.5rem;
+      opacity: 0.95;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-white {
+      background: var(--white);
+      color: var(--primary-green);
+    }
+
+    .btn-white:hover {
+      background: var(--light-gray);
+      transform: translateY(-2px);
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--dark-green);
+      color: var(--white);
+      padding: 4rem 2rem 2rem;
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .footer-section h3 {
+      color: var(--accent-green);
+      margin-bottom: 1.5rem;
+      font-size: 1.3rem;
+    }
+
+    .footer-section ul {
+      list-style: none;
+    }
+
+    .footer-section ul li {
+      margin-bottom: 0.8rem;
+    }
+
+    .footer-section a {
+      color: var(--white);
+      text-decoration: none;
+      opacity: 0.8;
+      transition: opacity 0.3s;
+    }
+
+    .footer-section a:hover {
+      opacity: 1;
+      color: var(--accent-green);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      opacity: 0.7;
+    }
+
+    .disclaimer {
+      background: #FFF3CD;
+      border-left: 4px solid #FFC107;
+      padding: 1.5rem;
+      margin: 2rem auto;
+      max-width: 1200px;
+      border-radius: 8px;
+    }
+
+    .disclaimer strong {
+      color: #856404;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Mobile Menu Toggle */
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--primary-green);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+      }
+
+      .nav-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        flex-direction: column;
+        padding: 2rem;
+        box-shadow: 0 4px 10px var(--shadow);
+      }
+
+      .nav-menu.active {
+        display: flex;
+      }
+
+      .menu-toggle {
+        display: block;
+      }
+
+      .hero-buttons,
+      .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn-large {
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .section-header h2 {
+        font-size: 2rem;
+      }
+
+      .stat-number {
+        font-size: 2.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .nav-container {
+        padding: 1rem;
+      }
+
+      .hero {
+        padding: 4rem 1rem;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .features,
+      .specializations,
+      .technology,
+      .cta {
+        padding: 4rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header & Navigation -->
+  <header class="header" id="header">
+    <nav class="nav-container">
+      <a href="#" class="logo">
+        <span class="logo-icon">🧠</span>
+        <span>MindSpace</span>
+      </a>
+      
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+        ☰
+      </button>
+
+      <ul class="nav-menu" id="navMenu">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#specializations">Specializations</a></li>
+        <li><a href="#technology">Technology</a></li>
+         <li><a href="pitchdeck.html" class="btn btn-primary">Pitch Deck</a></li>
+        <li><a href="login.html" class="btn btn-outline">Login</a></li>
+        <li><a href="register.html" class="btn btn-primary">Get Started</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Your Mental Health Journey Starts Here</h1>
+      <p class="hero-subtitle">Connect. Track. Heal.</p>
+      <p>A comprehensive platform connecting you with licensed therapists, enabling flexible appointment booking, and providing powerful mood tracking capabilities—all with complete client-side privacy.</p>
+      <div class="hero-buttons">
+        <a href="pages/register.html" class="btn btn-primary btn-large">Start Free Today</a>
+        <a href="pages/login.html" class="btn btn-outline btn-large">Demo Account</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats">
+    <div class="stats-container">
+      <div class="stat-item">
+        <div class="stat-number">8+</div>
+        <div class="stat-label">Professional Therapists</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">10</div>
+        <div class="stat-label">Specialization Categories</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">10</div>
+        <div class="stat-label">Mood Tracking Options</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Client-Side Privacy</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <h2>Comprehensive Mental Health Platform</h2>
+      <p>Everything you need to manage your mental wellness in one secure, privacy-focused application</p>
+    </div>
+
+    <div class="features-grid">
+      <!-- Authentication -->
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3>Secure Authentication</h3>
+        <p>Complete user management system with privacy controls</p>
+        <ul class="feature-list">
+          <li>User registration & validation</li>
+          <li>Secure login with sessions</li>
+          <li>"Remember me" functionality</li>
+          <li>Profile management</li>
+          <li>Emergency contacts</li>
+          <li>Demo account available</li>
+        </ul>
+      </div>
+
+      <!-- Therapist Management -->
+      <div class="feature-card">
+        <div class="feature-icon">👨‍⚕️</div>
+        <h3>Find Your Therapist</h3>
+        <p>Browse and connect with qualified mental health professionals</p>
+        <ul class="feature-list">
+          <li>8 pre-loaded therapists</li>
+          <li>10 specialization areas</li>
+          <li>Detailed profiles & bios</li>
+          <li>Filter by specialization</li>
+          <li>Rating & availability display</li>
+          <li>Connect with multiple therapists</li>
+        </ul>
+      </div>
+
+      <!-- Appointment Booking -->
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Flexible Scheduling</h3>
+        <p>Book and manage appointments with ease</p>
+        <ul class="feature-list">
+          <li>Calendar interface</li>
+          <li>4 session duration options</li>
+          <li>Real-time availability</li>
+          <li>Conflict detection</li>
+          <li>Cancel & reschedule</li>
+          <li>Appointment notes</li>
+        </ul>
+      </div>
+
+      <!-- Mood Tracker -->
+      <div class="feature-card">
+        <div class="feature-icon">😊</div>
+        <h3>Advanced Mood Tracking</h3>
+        <p>Log and analyze your emotional patterns over time</p>
+        <ul class="feature-list">
+          <li>10 mood categories</li>
+          <li>Intensity scale (1-10)</li>
+          <li>Daily mood logging</li>
+          <li>Streak tracking</li>
+          <li>Trend analysis</li>
+          <li>Export to CSV</li>
+        </ul>
+      </div>
+
+      <!-- Dashboard & Analytics -->
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Insights Dashboard</h3>
+        <p>Track your progress with comprehensive analytics</p>
+        <ul class="feature-list">
+          <li>Live statistics overview</li>
+          <li>Upcoming appointments</li>
+          <li>Recent mood entries</li>
+          <li>Trend analysis</li>
+          <li>Smart recommendations</li>
+          <li>Session correlations</li>
+        </ul>
+      </div>
+
+      <!-- Privacy & Security -->
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Complete Privacy</h3>
+        <p>Your data never leaves your device</p>
+        <ul class="feature-list">
+          <li>100% client-side storage</li>
+          <li>IndexedDB technology</li>
+          <li>No server communication</li>
+          <li>Local data only</li>
+          <li>Easy account deletion</li>
+          <li>Full user control</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Specializations Section -->
+  <section class="specializations" id="specializations">
+    <div class="section-header">
+      <h2>Therapy Specializations</h2>
+      <p>Connect with therapists who specialize in your specific needs</p>
+    </div>
+
+    <div class="specializations-grid">
+      <div class="specialization-badge">😰 Anxiety & Stress Management</div>
+      <div class="specialization-badge">😢 Depression & Mood Disorders</div>
+      <div class="specialization-badge">💔 Trauma & PTSD</div>
+      <div class="specialization-badge">❤️ Relationship & Family Therapy</div>
+      <div class="specialization-badge">🚫 Addiction & Recovery</div>
+      <div class="specialization-badge">🕊️ Grief & Loss Counseling</div>
+      <div class="specialization-badge">💼 Career & Life Coaching</div>
+      <div class="specialization-badge">😴 Sleep Disorders</div>
+      <div class="specialization-badge">🍽️ Eating Disorders</div>
+      <div class="specialization-badge">👶 Child & Adolescent Therapy</div>
+    </div>
+  </section>
+
+  <!-- Technology Section -->
+  <section class="technology" id="technology">
+    <div class="section-header">
+      <h2>Built with Modern Technology</h2>
+      <p>Privacy-first architecture with no server dependencies</p>
+    </div>
+
+    <div class="tech-grid">
+      <div class="tech-item">
+        <h4>HTML5</h4>
+        <span class="tech-badge">Semantic Markup</span>
+      </div>
+      <div class="tech-item">
+        <h4>CSS3</h4>
+        <span class="tech-badge">Responsive Design</span>
+      </div>
+      <div class="tech-item">
+        <h4>Vanilla JavaScript</h4>
+        <span class="tech-badge">ES6+</span>
+      </div>
+      <div class="tech-item">
+        <h4>IndexedDB</h4>
+        <span class="tech-badge">Client-Side Database</span>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      <strong>⚠️ Demo Application:</strong> This is an educational project for demonstration purposes. It uses client-side storage (IndexedDB) and does not connect to any backend servers. All data is stored locally in your browser.
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <h2>Ready to Start Your Journey?</h2>
+    <p>Join thousands taking control of their mental wellness today</p>
+    <div class="cta-buttons">
+      <a href="pages/register.html" class="btn btn-white btn-large">Create Free Account</a>
+      <a href="pages/login.html" class="btn btn-outline btn-large">Try Demo Account</a>
+    </div>
+    <p style="margin-top: 2rem; font-size: 1rem; opacity: 0.9;">
+      Demo credentials: <strong>demo@mindspace.com</strong> / <strong>demo123</strong>
+    </p>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>🧠 MindSpace</h3>
+        <p>Your privacy-focused mental health companion. Built with care for your wellbeing.</p>
+      </div>
+
+      <div class="footer-section">
+        <h3>Features</h3>
+        <ul>
+          <li><a href="#features">Therapist Matching</a></li>
+          <li><a href="#features">Appointment Booking</a></li>
+          <li><a href="#features">Mood Tracking</a></li>
+          <li><a href="#features">Analytics Dashboard</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Resources</h3>
+        <ul>
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">GitHub Repository</a></li>
+          <li><a href="#">Support</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Crisis Support</h3>
+        <ul>
+          <li><a href="tel:988">National Suicide Prevention: 988</a></li>
+          <li><a href="#">Crisis Text Line</a></li>
+          <li><a href="#">Emergency Resources</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2024 MindSpace. Built with 💚 for mental health awareness.</p>
+      <p style="margin-top: 1rem; font-size: 0.9rem;">
+        <strong>Disclaimer:</strong> Not a replacement for professional mental health care. Always consult qualified healthcare providers.
+      </p>
+      <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+        <strong>Privacy:</strong> All data stored locally in your browser. No server transmission.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const navMenu = document.getElementById('navMenu');
+
+    menuToggle.addEventListener('click', () => {
+      navMenu.classList.toggle('active');
+    });
+
+    // Header scroll effect
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+          // Close mobile menu if open
+          navMenu.classList.remove('active');
+        }
+      });
+    });
+
+    // Add animation on scroll
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .stat-item, .specialization-badge').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'all 0.6s ease';
+      observer.observe(el);
+    });
+  </script>
+
+</body>
+</html>

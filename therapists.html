@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Therapists - MindSpace</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧠 MindSpace</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="therapists.html" class="nav-item active">
+          <span class="nav-icon">👨‍⚕️</span>
+          <span>My Therapists</span>
+        </a>
+        <a href="appointments.html" class="nav-item">
+          <span class="nav-icon">📅</span>
+          <span>Appointments</span>
+        </a>
+        <a href="mood-tracker.html" class="nav-item">
+          <span class="nav-icon">😊</span>
+          <span>Mood Tracker</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+          <span class="nav-icon">👤</span>
+          <span>Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="btn btn-outline btn-block">
+          <span>🚪 Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <h1>My Therapists</h1>
+        </div>
+        <div class="top-bar-right">
+          <button id="browseTherapistsBtn" class="btn btn-primary">
+            + Find New Therapist
+          </button>
+        </div>
+      </header>
+
+      <!-- Therapists Content -->
+      <div class="dashboard-content">
+        <!-- View Toggle -->
+        <div class="view-toggle card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h3 style="margin: 0;">Your Connected Therapists</h3>
+          <div class="toggle-buttons">
+            <button id="myTherapistsBtn" class="btn btn-primary btn-sm">My Therapists</button>
+            <button id="allTherapistsBtn" class="btn btn-outline btn-sm">Browse All</button>
+          </div>
+        </div>
+
+        <!-- My Therapists Section -->
+        <div id="myTherapistsSection">
+          <div id="myTherapistsList" class="therapist-grid">
+            <p class="text-center text-muted">Loading your therapists...</p>
+          </div>
+        </div>
+
+        <!-- Browse All Therapists Section -->
+        <div id="browseTherapistsSection" style="display: none;">
+          <!-- Filter Bar -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3>Filter Therapists</h3>
+            <div class="filter-bar">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="specializationFilter">Specialization</label>
+                <select id="specializationFilter" class="filter-select">
+                  <option value="">All Specializations</option>
+                  <option value="Anxiety & Stress Management">Anxiety & Stress Management</option>
+                  <option value="Depression & Mood Disorders">Depression & Mood Disorders</option>
+                  <option value="Trauma & PTSD">Trauma & PTSD</option>
+                  <option value="Relationship & Family Therapy">Relationship & Family Therapy</option>
+                  <option value="Addiction & Recovery">Addiction & Recovery</option>
+                  <option value="Grief & Loss Counseling">Grief & Loss Counseling</option>
+                  <option value="Career & Life Coaching">Career & Life Coaching</option>
+                  <option value="Sleep Disorders">Sleep Disorders</option>
+                  <option value="Eating Disorders">Eating Disorders</option>
+                  <option value="Child & Adolescent Therapy">Child & Adolescent Therapy</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- All Therapists List -->
+          <div id="allTherapistsList" class="therapist-grid">
+            <p class="text-center text-muted">Loading therapists...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Therapist Detail Modal -->
+  <div id="therapistModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <div id="therapistDetails">
+        <!-- Details will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="js/db.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/therapist.js"></script>
+  <script>
+    let currentUser = null;
+    let currentView = 'my';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check authentication
+      const isAuth = await Auth.requireAuth();
+      if (!isAuth) return;
+
+      // Get current user
+      currentUser = await Auth.getCurrentUser();
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Initialize
+      await loadMyTherapists();
+      
+      // Event listeners
+      document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+      document.getElementById('browseTherapistsBtn').addEventListener('click', showBrowseView);
+      document.getElementById('myTherapistsBtn').addEventListener('click', showMyTherapistsView);
+      document.getElementById('allTherapistsBtn').addEventListener('click', showBrowseView);
+      document.getElementById('specializationFilter').addEventListener('change', handleFilterChange);
+      
+      // Modal close
+      document.querySelector('.modal-close').addEventListener('click', closeModal);
+      window.addEventListener('click', (e) => {
+        const modal = document.getElementById('therapistModal');
+        if (e.target === modal) closeModal();
+      });
+    });
+
+    async function loadMyTherapists() {
+      const container = document.getElementById('myTherapistsList');
+      
+      try {
+        const myTherapists = await TherapistManager.getMyTherapists(currentUser.id);
+        
+        if (myTherapists.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state card" style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+              <div style="font-size: 4rem; margin-bottom: 1rem;">👨‍⚕️</div>
+              <h3>No Therapists Yet</h3>
+              <p class="text-muted">You haven't connected with any therapists yet.</p>
+              <button onclick="showBrowseView()" class="btn btn-primary mt-2">
+                Find a Therapist
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = myTherapists.map(therapist => `
+          <div class="therapist-card card">
+            <img src="${therapist.image}" alt="${therapist.name}" class="therapist-image">
+            <div class="therapist-info">
+              <h3>${therapist.name}</h3>
+              <p class="therapist-specialization">${therapist.specialization}</p>
+              <div class="therapist-rating">
+                <span>⭐ ${therapist.rating}</span>
+              </div>
+              <p class="therapist-bio">${therapist.bio.substring(0, 100)}...</p>
+              <div class="therapist-actions">
+                <button onclick="viewTherapistDetails(${therapist.id})" class="btn btn-outline btn-sm btn-block">
+                  View Profile
+                </button>
+                <button onclick="removeTherapist(${therapist.id})" class="btn btn-sm btn-block" style="background-color: #DC3545; color: white;">
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        
+      } catch (error) {
+        console.error('Error loading therapists:', error);
+        container.innerHTML = '<p class="text-center text-muted">Error loading therapists</p>';
+      }
+    }
+
+    async function loadAllTherapists(filter = '') {
+      const container = document.getElementById('allTherapistsList');
+      
+      try {
+        const allTherapists = await mindspaceDB.getAll('therapists');
+        const myTherapists = await TherapistManager.getMyTherapists(currentUser.id);
+        const myTherapistIds = myTherapists.map(t => t.id);
+        
+        let therapists = allTherapists;
+        if (filter) {
+          therapists = therapists.filter(t => t.specialization === filter);
+        }
+
+        container.innerHTML = therapists.map(therapist => {
+          const isConnected = myTherapistIds.includes(therapist.id);
+          return `
+            <div class="therapist-card card">
+              <img src="${therapist.image}" alt="${therapist.name}" class="therapist-image">
+              <div class="therapist-info">
+                <h3>${therapist.name}</h3>
+                <p class="therapist-specialization">${therapist.specialization}</p>
+                <div class="therapist-rating">
+                  <span>⭐ ${therapist.rating}</span>
+                </div>
+                <p class="therapist-availability">Available: ${therapist.availability.join(', ')}</p>
+                <p class="therapist-bio">${therapist.bio.substring(0, 100)}...</p>
+                <div class="therapist-actions">
+                  <button onclick="viewTherapistDetails(${therapist.id})" class="btn btn-outline btn-sm btn-block">
+                    View Profile
+                  </button>
+                  ${isConnected ? 
+                    '<span class="badge badge-success btn-block" style="text-align: center; padding: 8px;">✓ Connected</span>' :
+                    `<button onclick="connectTherapist(${therapist.id})" class="btn btn-primary btn-sm btn-block">Connect</button>`
+                  }
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+      } catch (error) {
+        console.error('Error loading therapists:', error);
+        container.innerHTML = '<p class="text-center text-muted">Error loading therapists</p>';
+      }
+    }
+
+    async function viewTherapistDetails(therapistId) {
+      const therapist = await mindspaceDB.get('therapists', therapistId);
+      const myTherapists = await TherapistManager.getMyTherapists(currentUser.id);
+      const isConnected = myTherapists.some(t => t.id === therapistId);
+      
+      document.getElementById('therapistDetails').innerHTML = `
+        <div class="therapist-detail-header">
+          <img src="${therapist.image}" alt="${therapist.name}" class="therapist-detail-image">
+          <div>
+            <h2>${therapist.name}</h2>
+            <p class="therapist-specialization">${therapist.specialization}</p>
+            <div class="therapist-rating">⭐ ${therapist.rating} Rating</div>
+          </div>
+        </div>
+        <div class="therapist-detail-body">
+          <h3>About</h3>
+          <p>${therapist.bio}</p>
+          
+          <h3>Contact Information</h3>
+          <p>📧 ${therapist.email}</p>
+          <p>📞 ${therapist.phone}</p>
+          
+          <h3>Availability</h3>
+          <p>${therapist.availability.join(', ')}</p>
+          
+          <div class="modal-actions">
+            ${isConnected ? 
+              `<button onclick="removeTherapist(${therapist.id}); closeModal();" class="btn" style="background-color: #DC3545; color: white;">Disconnect</button>` :
+              `<button onclick="connectTherapist(${therapist.id}); closeModal();" class="btn btn-primary">Connect with Therapist</button>`
+            }
+            <button onclick="closeModal()" class="btn btn-outline">Close</button>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('therapistModal').style.display = 'block';
+    }
+
+    async function connectTherapist(therapistId) {
+      const result = await TherapistManager.connectTherapist(currentUser.id, therapistId);
+      
+      if (result.success) {
+        UIUtils.showNotification('Successfully connected with therapist!', 'success');
+        await loadMyTherapists();
+        if (currentView === 'browse') {
+          await loadAllTherapists();
+        }
+      } else {
+        UIUtils.showNotification(result.message, 'error');
+      }
+    }
+
+    async function removeTherapist(therapistId) {
+      if (!confirm('Are you sure you want to disconnect from this therapist?')) return;
+      
+      const result = await TherapistManager.disconnectTherapist(currentUser.id, therapistId);
+      
+      if (result.success) {
+        UIUtils.showNotification('Disconnected from therapist', 'success');
+        await loadMyTherapists();
+        if (currentView === 'browse') {
+          await loadAllTherapists();
+        }
+      } else {
+        UIUtils.showNotification(result.message, 'error');
+      }
+    }
+
+    function showMyTherapistsView() {
+      currentView = 'my';
+      document.getElementById('myTherapistsSection').style.display = 'block';
+      document.getElementById('browseTherapistsSection').style.display = 'none';
+      document.getElementById('myTherapistsBtn').classList.add('btn-primary');
+      document.getElementById('myTherapistsBtn').classList.remove('btn-outline');
+      document.getElementById('allTherapistsBtn').classList.add('btn-outline');
+      document.getElementById('allTherapistsBtn').classList.remove('btn-primary');
+    }
+
+    async function showBrowseView() {
+      currentView = 'browse';
+      document.getElementById('myTherapistsSection').style.display = 'none';
+      document.getElementById('browseTherapistsSection').style.display = 'block';
+      document.getElementById('myTherapistsBtn').classList.add('btn-outline');
+      document.getElementById('myTherapistsBtn').classList.remove('btn-primary');
+      document.getElementById('allTherapistsBtn').classList.add('btn-primary');
+      document.getElementById('allTherapistsBtn').classList.remove('btn-outline');
+      await loadAllTherapists();
+    }
+
+    async function handleFilterChange() {
+      const filter = document.getElementById('specializationFilter').value;
+      await loadAllTherapists(filter);
+    }
+
+    function closeModal() {
+      document.getElementById('therapistModal').style.display = 'none';
+    }
+
+    async function handleLogout() {
+      if (confirm('Are you sure you want to logout?')) {
+        await Auth.logout();
+      }
+    }
+  </script>
+
+  <style>
+    .therapist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .therapist-card {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .therapist-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      margin: -24px -24px 0 -24px;
+    }
+
+    .therapist-info {
+      padding-top: 1rem;
+    }
+
+    .therapist-info h3 {
+      margin-bottom: 0.5rem;
+      color: var(--dark-green);
+    }
+
+    .therapist-specialization {
+      color: var(--primary-green);
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .therapist-rating {
+      margin-bottom: 0.75rem;
+    }
+
+    .therapist-bio {
+      font-size: 0.9rem;
+      color: var(--text-medium);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    .therapist-availability {
+      font-size: 0.875rem;
+      color: var(--text-light);
+      margin-bottom: 0.75rem;
+    }
+
+    .therapist-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: auto;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.3s;
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 2rem;
+      border-radius: var(--border-radius-lg);
+      max-width: 600px;
+      position: relative;
+      animation: slideIn 0.3s;
+    }
+
+    .modal-close {
+      position: absolute;
+      right: 1.5rem;
+      top: 1.5rem;
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--text-light);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--text-dark);
+    }
+
+    .therapist-detail-header {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .therapist-detail-image {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--light-green);
+    }
+
+    .therapist-detail-body h3 {
+      color: var(--primary-green);
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .filter-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .therapist-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-content {
+        margin: 10% 1rem;
+        padding: 1.5rem;
+      }
+
+      .therapist-detail-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .modal-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</body>
+</html>

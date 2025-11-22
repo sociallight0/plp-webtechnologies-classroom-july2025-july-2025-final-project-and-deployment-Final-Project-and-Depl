@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - MindSpace</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <style>
+    .profile-picture-section {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .profile-picture-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+
+    .profile-picture-upload {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .profile-picture-overlay {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background-color: var(--primary-green);
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 3px solid white;
+      font-size: 1.2rem;
+      transition: var(--transition);
+    }
+
+    .profile-picture-overlay:hover {
+      background-color: var(--dark-green);
+      transform: scale(1.1);
+    }
+
+    #profilePictureInput {
+      display: none;
+    }
+
+    .picture-options {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .picture-option-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      border: 2px solid var(--border-color);
+      background-color: white;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .picture-option-btn:hover {
+      border-color: var(--primary-green);
+      background-color: var(--light-green);
+    }
+
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .avatar-option {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid var(--border-color);
+      cursor: pointer;
+      transition: var(--transition);
+      object-fit: cover;
+    }
+
+    .avatar-option:hover {
+      border-color: var(--primary-green);
+      transform: scale(1.05);
+    }
+
+    .avatar-option.selected {
+      border-color: var(--primary-green);
+      box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.2);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 30px;
+      border: 1px solid #888;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+    }
+
+    .modal-close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧠 MindSpace</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="therapists.html" class="nav-item">
+          <span class="nav-icon">👨‍⚕️</span>
+          <span>My Therapists</span>
+        </a>
+        <a href="appointments.html" class="nav-item">
+          <span class="nav-icon">📅</span>
+          <span>Appointments</span>
+        </a>
+        <a href="mood-tracker.html" class="nav-item">
+          <span class="nav-icon">😊</span>
+          <span>Mood Tracker</span>
+        </a>
+        <a href="profile.html" class="nav-item active">
+          <span class="nav-icon">👤</span>
+          <span>Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="btn btn-outline btn-block">
+          <span>🚪 Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <h1>My Profile</h1>
+        </div>
+      </header>
+
+      <!-- Profile Content -->
+      <div class="dashboard-content">
+        <!-- Profile Header -->
+        <div class="profile-header card">
+          <div class="profile-picture-section">
+            <div class="profile-picture-wrapper">
+              <img id="profileAvatar" src="" alt="Profile Picture" class="profile-avatar">
+              <label for="profilePictureInput" class="profile-picture-overlay" title="Change profile picture">
+                📷
+              </label>
+              <input type="file" id="profilePictureInput" accept="image/*">
+            </div>
+            <div class="picture-options">
+              <button class="picture-option-btn" onclick="openAvatarModal()">Choose Avatar</button>
+              <button class="picture-option-btn" onclick="generateInitialsAvatar()">Use Initials</button>
+            </div>
+          </div>
+          
+          <div class="profile-info">
+            <h2 id="profileName">Loading...</h2>
+            <p id="profileEmail" class="text-muted">Loading...</p>
+            <p class="profile-joined">Member since: <span id="joinDate">-</span></p>
+          </div>
+        </div>
+
+        <!-- Profile Tabs -->
+        <div class="profile-tabs card">
+          <div class="tabs-header">
+            <button class="tab-btn active" data-tab="personal">Personal Information</button>
+            <button class="tab-btn" data-tab="security">Security</button>
+            <button class="tab-btn" data-tab="emergency">Emergency Contact</button>
+          </div>
+
+          <!-- Personal Information Tab -->
+          <div class="tab-content active" id="personal-tab">
+            <form id="personalInfoForm">
+              <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" name="fullName" required>
+              </div>
+
+              <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+              </div>
+
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required>
+              </div>
+
+              <div id="personalError" class="error-message"></div>
+
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+          </div>
+
+          <!-- Security Tab -->
+          <div class="tab-content" id="security-tab">
+            <form id="securityForm">
+              <div class="form-group">
+                <label for="currentPassword">Current Password</label>
+                <input type="password" id="currentPassword" name="currentPassword" required>
+              </div>
+
+              <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" name="newPassword" required>
+                <small class="text-muted">Must be at least 6 characters with one number</small>
+              </div>
+
+              <div class="form-group">
+                <label for="confirmNewPassword">Confirm New Password</label>
+                <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
+              </div>
+
+              <div id="securityError" class="error-message"></div>
+
+              <button type="submit" class="btn btn-primary">Change Password</button>
+            </form>
+
+            <hr style="margin: 2rem 0;">
+
+            <div class="danger-zone">
+              <h3 style="color: #DC3545;">Danger Zone</h3>
+              <p class="text-muted">Once you delete your account, there is no going back. Please be certain.</p>
+              <button id="deleteAccountBtn" class="btn" style="background-color: #DC3545; color: white;">
+                Delete Account
+              </button>
+            </div>
+          </div>
+
+          <!-- Emergency Contact Tab -->
+          <div class="tab-content" id="emergency-tab">
+            <form id="emergencyForm">
+              <div class="form-group">
+                <label for="emergencyName">Emergency Contact Name</label>
+                <input type="text" id="emergencyName" name="emergencyName">
+              </div>
+
+              <div class="form-group">
+                <label for="emergencyPhone">Emergency Contact Phone</label>
+                <input type="tel" id="emergencyPhone" name="emergencyPhone">
+              </div>
+
+              <div class="form-group">
+                <label for="emergencyRelationship">Relationship</label>
+                <input type="text" id="emergencyRelationship" name="emergencyRelationship" placeholder="e.g., Parent, Spouse, Friend">
+              </div>
+
+              <div id="emergencyError" class="error-message"></div>
+
+              <button type="submit" class="btn btn-primary">Save Emergency Contact</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Avatar Selection Modal -->
+  <div id="avatarModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeAvatarModal()">&times;</span>
+      <h2>Choose an Avatar</h2>
+      <p class="text-muted">Select a pre-made avatar or upload your own image</p>
+      
+      <div class="avatar-grid" id="avatarGrid">
+        <!-- Avatars will be loaded here -->
+      </div>
+
+      <div style="margin-top: 1.5rem; text-align: center;">
+        <button onclick="closeAvatarModal()" class="btn btn-outline">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/db.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // CRITICAL: Wait for database to be ready first
+      try {
+        await window.dbReadyPromise;
+      } catch (error) {
+        console.error('Failed to initialize database:', error);
+        alert('Database initialization failed. Please refresh the page.');
+        return;
+      }
+
+      // Check authentication
+      const isAuth = await Auth.requireAuth();
+      if (!isAuth) return;
+
+      // Get current user
+      currentUser = await Auth.getCurrentUser();
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Load profile data
+      loadProfileData();
+
+      // Tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabName = btn.dataset.tab;
+          switchTab(tabName);
+        });
+      });
+
+      // Profile picture upload
+      document.getElementById('profilePictureInput').addEventListener('change', handleProfilePictureUpload);
+
+      // Form handlers
+      document.getElementById('personalInfoForm').addEventListener('submit', handlePersonalInfoSubmit);
+      document.getElementById('securityForm').addEventListener('submit', handleSecuritySubmit);
+      document.getElementById('emergencyForm').addEventListener('submit', handleEmergencySubmit);
+      document.getElementById('deleteAccountBtn').addEventListener('click', handleDeleteAccount);
+      document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    });
+
+    function loadProfileData() {
+      // Profile header
+      document.getElementById('profileAvatar').src = currentUser.profileImage;
+      document.getElementById('profileName').textContent = currentUser.fullName;
+      document.getElementById('profileEmail').textContent = currentUser.email;
+      document.getElementById('joinDate').textContent = DateUtils.formatDate(currentUser.dateJoined);
+
+      // Personal info form
+      document.getElementById('fullName').value = currentUser.fullName;
+      document.getElementById('username').value = currentUser.username;
+      document.getElementById('email').value = currentUser.email;
+      document.getElementById('phone').value = currentUser.phone;
+
+      // Emergency contact
+      if (currentUser.emergencyContact) {
+        document.getElementById('emergencyName').value = currentUser.emergencyContact.name || '';
+        document.getElementById('emergencyPhone').value = currentUser.emergencyContact.phone || '';
+        document.getElementById('emergencyRelationship').value = currentUser.emergencyContact.relationship || '';
+      }
+    }
+
+    function handleProfilePictureUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Image size should be less than 2MB');
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const imageUrl = e.target.result;
+        
+        // Update profile picture
+        const result = await Auth.updateProfile(currentUser.id, {
+          profileImage: imageUrl
+        });
+
+        if (result.success) {
+          currentUser = result.user;
+          document.getElementById('profileAvatar').src = imageUrl;
+          UIUtils.showNotification('Profile picture updated!', 'success');
+        } else {
+          alert('Failed to update profile picture');
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function generateInitialsAvatar() {
+      const names = currentUser.fullName.split(' ');
+      const initials = names.map(n => n.charAt(0)).join('').substring(0, 2).toUpperCase();
+      const colors = ['2D6A4F', '52B788', '1B4332', '95D5B2', 'B7E4C7'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      
+      const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${randomColor}&color=fff&size=200&bold=true`;
+      
+      updateProfilePicture(avatarUrl);
+    }
+
+    function openAvatarModal() {
+      // Generate avatar options
+      const avatarGrid = document.getElementById('avatarGrid');
+      const avatarOptions = [];
+      
+      // Pravatar images (random avatars)
+      for (let i = 1; i <= 20; i++) {
+        avatarOptions.push(`https://i.pravatar.cc/150?img=${i}`);
+      }
+
+      avatarGrid.innerHTML = avatarOptions.map((url, index) => `
+        <img src="${url}" 
+             alt="Avatar ${index + 1}" 
+             class="avatar-option"
+             onclick="selectAvatar('${url}')">
+      `).join('');
+
+      document.getElementById('avatarModal').style.display = 'block';
+    }
+
+    function closeAvatarModal() {
+      document.getElementById('avatarModal').style.display = 'none';
+    }
+
+    async function selectAvatar(avatarUrl) {
+      await updateProfilePicture(avatarUrl);
+      closeAvatarModal();
+    }
+
+    async function updateProfilePicture(imageUrl) {
+      const result = await Auth.updateProfile(currentUser.id, {
+        profileImage: imageUrl
+      });
+
+      if (result.success) {
+        currentUser = result.user;
+        document.getElementById('profileAvatar').src = imageUrl;
+        UIUtils.showNotification('Profile picture updated!', 'success');
+      } else {
+        alert('Failed to update profile picture');
+      }
+    }
+
+    function switchTab(tabName) {
+      // Update buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.tab === tabName) {
+          btn.classList.add('active');
+        }
+      });
+
+      // Update content
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+    }
+
+    async function handlePersonalInfoSubmit(e) {
+      e.preventDefault();
+      UIUtils.clearError('personalError');
+
+      const updates = {
+        fullName: document.getElementById('fullName').value.trim(),
+        username: document.getElementById('username').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim()
+      };
+
+      // Validation
+      if (!ValidationUtils.isValidEmail(updates.email)) {
+        UIUtils.showError('personalError', 'Please enter a valid email');
+        return;
+      }
+
+      if (!ValidationUtils.isValidPhone(updates.phone)) {
+        UIUtils.showError('personalError', 'Please enter a valid phone number');
+        return;
+      }
+
+      const result = await Auth.updateProfile(currentUser.id, updates);
+      
+      if (result.success) {
+        currentUser = result.user;
+        loadProfileData();
+        UIUtils.showNotification('Profile updated successfully!', 'success');
+      } else {
+        UIUtils.showError('personalError', result.message);
+      }
+    }
+
+    async function handleSecuritySubmit(e) {
+      e.preventDefault();
+      UIUtils.clearError('securityError');
+
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        UIUtils.showError('securityError', 'New passwords do not match');
+        return;
+      }
+
+      if (!ValidationUtils.isValidPassword(newPassword)) {
+        UIUtils.showError('securityError', 'Password must be at least 6 characters with one number');
+        return;
+      }
+
+      const result = await Auth.changePassword(currentUser.id, currentPassword, newPassword);
+      
+      if (result.success) {
+        UIUtils.showNotification('Password changed successfully!', 'success');
+        document.getElementById('securityForm').reset();
+      } else {
+        UIUtils.showError('securityError', result.message);
+      }
+    }
+
+    async function handleEmergencySubmit(e) {
+      e.preventDefault();
+      UIUtils.clearError('emergencyError');
+
+      const updates = {
+        emergencyContact: {
+          name: document.getElementById('emergencyName').value.trim(),
+          phone: document.getElementById('emergencyPhone').value.trim(),
+          relationship: document.getElementById('emergencyRelationship').value.trim()
+        }
+      };
+
+      const result = await Auth.updateProfile(currentUser.id, updates);
+      
+      if (result.success) {
+        currentUser = result.user;
+        UIUtils.showNotification('Emergency contact updated!', 'success');
+      } else {
+        UIUtils.showError('emergencyError', result.message);
+      }
+    }
+
+    async function handleDeleteAccount() {
+      const confirmed = confirm('Are you absolutely sure you want to delete your account? This action cannot be undone.');
+      
+      if (!confirmed) return;
+
+      const password = prompt('Please enter your password to confirm account deletion:');
+      
+      if (!password) return;
+
+      const result = await Auth.deleteAccount(currentUser.id, password);
+      
+      if (result.success) {
+        alert('Your account has been deleted.');
+        window.location.href = 'index.html';
+      } else {
+        alert(result.message);
+      }
+    }
+
+    async function handleLogout() {
+      if (confirm('Are you sure you want to logout?')) {
+        await Auth.logout();
+      }
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const avatarModal = document.getElementById('avatarModal');
+      if (event.target == avatarModal) {
+        closeAvatarModal();
+      }
+    }
+  </script>
+</body>
+</html>

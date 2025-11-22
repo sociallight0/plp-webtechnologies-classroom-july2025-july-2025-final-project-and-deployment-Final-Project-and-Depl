@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointments - MindSpace</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧠 MindSpace</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="therapists.html" class="nav-item">
+          <span class="nav-icon">👨‍⚕️</span>
+          <span>My Therapists</span>
+        </a>
+        <a href="appointments.html" class="nav-item active">
+          <span class="nav-icon">📅</span>
+          <span>Appointments</span>
+        </a>
+        <a href="mood-tracker.html" class="nav-item">
+          <span class="nav-icon">😊</span>
+          <span>Mood Tracker</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+          <span class="nav-icon">👤</span>
+          <span>Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="btn btn-outline btn-block">
+          <span>🚪 Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <h1>Appointments</h1>
+        </div>
+        <div class="top-bar-right">
+          <button id="bookAppointmentBtn" class="btn btn-primary">
+            + Book New Appointment
+          </button>
+        </div>
+      </header>
+
+      <!-- Appointments Content -->
+      <div class="dashboard-content">
+        <!-- Appointment Tabs -->
+        <div class="card" style="padding: 0; margin-bottom: 1.5rem;">
+          <div class="tabs-header" style="border-bottom: 2px solid var(--border-color);">
+            <button class="tab-btn active" data-tab="upcoming">Upcoming</button>
+            <button class="tab-btn" data-tab="past">Past</button>
+            <button class="tab-btn" data-tab="cancelled">Cancelled</button>
+          </div>
+
+          <!-- Upcoming Appointments -->
+          <div class="tab-content active" id="upcoming-tab" style="padding: 2rem;">
+            <div id="upcomingAppointments">
+              <p class="text-center text-muted">Loading appointments...</p>
+            </div>
+          </div>
+
+          <!-- Past Appointments -->
+          <div class="tab-content" id="past-tab" style="padding: 2rem;">
+            <div id="pastAppointments">
+              <p class="text-center text-muted">Loading appointments...</p>
+            </div>
+          </div>
+
+          <!-- Cancelled Appointments -->
+          <div class="tab-content" id="cancelled-tab" style="padding: 2rem;">
+            <div id="cancelledAppointments">
+              <p class="text-center text-muted">Loading appointments...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Book Appointment Modal -->
+  <div id="bookModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+      <span class="modal-close">&times;</span>
+      <h2>Book New Appointment</h2>
+      
+      <form id="bookAppointmentForm">
+        <div class="form-group">
+          <label for="therapistSelect">Select Therapist *</label>
+          <select id="therapistSelect" required>
+            <option value="">Choose a therapist</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="appointmentDate">Date *</label>
+          <input type="date" id="appointmentDate" required>
+        </div>
+
+        <div class="form-group">
+          <label for="durationSelect">Session Duration *</label>
+          <select id="durationSelect" required>
+            <option value="30">30 minutes</option>
+            <option value="50" selected>50 minutes</option>
+            <option value="60">60 minutes</option>
+            <option value="90">90 minutes</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Available Time Slots</label>
+          <div id="timeSlots" class="time-slots">
+            <p class="text-muted">Select a date and therapist to view available times</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="appointmentNotes">Notes (Optional)</label>
+          <textarea id="appointmentNotes" rows="3" placeholder="Any specific topics or concerns you'd like to discuss..."></textarea>
+        </div>
+
+        <div id="bookingError" class="error-message"></div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Book Appointment</button>
+          <button type="button" onclick="closeBookModal()" class="btn btn-outline">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View/Edit Appointment Modal -->
+  <div id="viewModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeViewModal()">&times;</span>
+      <div id="appointmentDetails"></div>
+    </div>
+  </div>
+
+  <script src="js/db.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/therapist.js"></script>
+  <script src="js/appointments.js"></script>
+  <script>
+    let currentUser = null;
+    let selectedTime = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // CRITICAL: Wait for database to be ready first
+      try {
+        await window.dbReadyPromise;
+      } catch (error) {
+        console.error('Failed to initialize database:', error);
+        alert('Database initialization failed. Please refresh the page.');
+        return;
+      }
+
+      // Check authentication
+      const isAuth = await Auth.requireAuth();
+      if (!isAuth) return;
+
+      // Get current user
+      currentUser = await Auth.getCurrentUser();
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Load appointments
+      await loadAllAppointments();
+
+      // Event listeners
+      document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+      document.getElementById('bookAppointmentBtn').addEventListener('click', openBookModal);
+      
+      // Tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      // Booking form
+      document.getElementById('therapistSelect').addEventListener('change', updateAvailableSlots);
+      document.getElementById('appointmentDate').addEventListener('change', updateAvailableSlots);
+      document.getElementById('durationSelect').addEventListener('change', updateAvailableSlots);
+      document.getElementById('bookAppointmentForm').addEventListener('submit', handleBooking);
+
+      // Modal close
+      document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', () => {
+          closeBookModal();
+          closeViewModal();
+        });
+      });
+
+      window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+          closeBookModal();
+          closeViewModal();
+        }
+      });
+
+      // Set minimum date to today
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('appointmentDate').min = today;
+    });
+
+    async function loadAllAppointments() {
+      await Promise.all([
+        loadUpcomingAppointments(),
+        loadPastAppointments(),
+        loadCancelledAppointments()
+      ]);
+    }
+
+    async function loadUpcomingAppointments() {
+      const container = document.getElementById('upcomingAppointments');
+      const appointments = await AppointmentManager.getUpcomingAppointments(currentUser.id);
+
+      if (appointments.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="text-align: center; padding: 3rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📅</div>
+            <h3>No Upcoming Appointments</h3>
+            <p class="text-muted">Book your first session with a therapist</p>
+            <button onclick="openBookModal()" class="btn btn-primary mt-2">Book Appointment</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = await generateAppointmentCards(appointments, 'upcoming');
+    }
+
+    async function loadPastAppointments() {
+      const container = document.getElementById('pastAppointments');
+      const appointments = await AppointmentManager.getPastAppointments(currentUser.id);
+
+      if (appointments.length === 0) {
+        container.innerHTML = '<p class="text-center text-muted">No past appointments</p>';
+        return;
+      }
+
+      container.innerHTML = await generateAppointmentCards(appointments, 'past');
+    }
+
+    async function loadCancelledAppointments() {
+      const container = document.getElementById('cancelledAppointments');
+      const appointments = await AppointmentManager.getCancelledAppointments(currentUser.id);
+
+      if (appointments.length === 0) {
+        container.innerHTML = '<p class="text-center text-muted">No cancelled appointments</p>';
+        return;
+      }
+
+      container.innerHTML = await generateAppointmentCards(appointments, 'cancelled');
+    }
+
+    async function generateAppointmentCards(appointments, type) {
+      let html = '<div class="appointment-cards">';
+      
+      for (const apt of appointments) {
+        const therapist = await mindspaceDB.get('therapists', apt.therapistId);
+        const statusColor = apt.status === 'confirmed' ? 'success' : 
+                           apt.status === 'completed' ? 'info' : 'danger';
+        
+        html += `
+          <div class="appointment-card card">
+            <div class="appointment-card-header">
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <img src="${therapist.image}" alt="${therapist.name}" class="therapist-thumb">
+                <div>
+                  <h4 style="margin: 0;">${therapist.name}</h4>
+                  <p style="margin: 0; font-size: 0.875rem; color: var(--text-light);">${therapist.specialization}</p>
+                </div>
+              </div>
+              <span class="badge badge-${statusColor}">${apt.status}</span>
+            </div>
+            <div class="appointment-card-body">
+              <div class="appointment-info-grid">
+                <div>
+                  <strong>📅 Date:</strong> ${DateUtils.formatDate(apt.date)}
+                </div>
+                <div>
+                  <strong>🕐 Time:</strong> ${apt.time}
+                </div>
+                <div>
+                  <strong>⏱️ Duration:</strong> ${apt.duration} minutes
+                </div>
+                <div>
+                  <strong>💰 Type:</strong> ${apt.type || 'Regular Session'}
+                </div>
+              </div>
+              ${apt.notes ? `<p class="appointment-notes"><strong>Notes:</strong> ${apt.notes}</p>` : ''}
+            </div>
+            <div class="appointment-card-footer">
+              ${type === 'upcoming' ? `
+                <button onclick="viewAppointment(${apt.id})" class="btn btn-outline btn-sm">View Details</button>
+                <button onclick="rescheduleAppointment(${apt.id})" class="btn btn-primary btn-sm">Reschedule</button>
+                <button onclick="cancelAppointment(${apt.id})" class="btn btn-sm" style="background-color: #DC3545; color: white;">Cancel</button>
+              ` : `
+                <button onclick="viewAppointment(${apt.id})" class="btn btn-outline btn-sm">View Details</button>
+              `}
+            </div>
+          </div>
+        `;
+      }
+      
+      html += '</div>';
+      return html;
+    }
+
+    async function openBookModal() {
+      try {
+        // Load therapists
+        const therapists = await TherapistManager.getMyTherapists(currentUser.id);
+        const select = document.getElementById('therapistSelect');
+        
+        if (therapists.length === 0) {
+          alert('Please connect with a therapist first from the My Therapists page');
+          window.location.href = 'therapists.html';
+          return;
+        }
+
+        select.innerHTML = '<option value="">Choose a therapist</option>' +
+          therapists.map(t => `<option value="${t.id}">${t.name} - ${t.specialization}</option>`).join('');
+
+        document.getElementById('bookModal').style.display = 'block';
+      } catch (error) {
+        console.error('Error opening book modal:', error);
+        alert('Failed to load therapists. Please try again.');
+      }
+    }
+
+    function closeBookModal() {
+      document.getElementById('bookModal').style.display = 'none';
+      document.getElementById('bookAppointmentForm').reset();
+      document.getElementById('timeSlots').innerHTML = '<p class="text-muted">Select a date and therapist to view available times</p>';
+      selectedTime = null;
+    }
+
+    async function updateAvailableSlots() {
+      const therapistId = parseInt(document.getElementById('therapistSelect').value);
+      const date = document.getElementById('appointmentDate').value;
+      const duration = parseInt(document.getElementById('durationSelect').value);
+
+      if (!therapistId || !date) {
+        document.getElementById('timeSlots').innerHTML = '<p class="text-muted">Select a date and therapist to view available times</p>';
+        return;
+      }
+
+      try {
+        const slots = await AppointmentManager.getAvailableSlots(therapistId, date, duration);
+        const container = document.getElementById('timeSlots');
+
+        if (slots.length === 0) {
+          container.innerHTML = '<p class="text-muted">No available time slots for this date</p>';
+          return;
+        }
+
+        container.innerHTML = slots.map(slot => `
+          <button type="button" class="time-slot-btn ${selectedTime === slot ? 'selected' : ''}" 
+                  onclick="selectTimeSlot('${slot}')">
+            ${slot}
+          </button>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading time slots:', error);
+        document.getElementById('timeSlots').innerHTML = '<p class="text-muted text-danger">Error loading time slots</p>';
+      }
+    }
+
+    function selectTimeSlot(time) {
+      selectedTime = time;
+      document.querySelectorAll('.time-slot-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        if (btn.textContent.trim() === time) {
+          btn.classList.add('selected');
+        }
+      });
+    }
+
+    async function handleBooking(e) {
+      e.preventDefault();
+      UIUtils.clearError('bookingError');
+
+      if (!selectedTime) {
+        UIUtils.showError('bookingError', 'Please select a time slot');
+        return;
+      }
+
+      try {
+        const appointmentData = {
+          therapistId: parseInt(document.getElementById('therapistSelect').value),
+          date: document.getElementById('appointmentDate').value,
+          time: selectedTime,
+          duration: parseInt(document.getElementById('durationSelect').value),
+          notes: document.getElementById('appointmentNotes').value.trim(),
+          type: 'Regular Session'
+        };
+
+        const result = await AppointmentManager.bookAppointment(currentUser.id, appointmentData);
+
+        if (result.success) {
+          UIUtils.showNotification('Appointment booked successfully!', 'success');
+          closeBookModal();
+          await loadAllAppointments();
+        } else {
+          UIUtils.showError('bookingError', result.message);
+        }
+      } catch (error) {
+        console.error('Error booking appointment:', error);
+        UIUtils.showError('bookingError', 'Failed to book appointment. Please try again.');
+      }
+    }
+
+    async function viewAppointment(appointmentId) {
+      try {
+        const appointment = await mindspaceDB.get('appointments', appointmentId);
+        const therapist = await mindspaceDB.get('therapists', appointment.therapistId);
+
+        document.getElementById('appointmentDetails').innerHTML = `
+          <h2>Appointment Details</h2>
+          <div class="appointment-detail-card">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+              <img src="${therapist.image}" alt="${therapist.name}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--light-green);">
+              <div>
+                <h3 style="margin: 0;">${therapist.name}</h3>
+                <p style="margin: 0; color: var(--primary-green);">${therapist.specialization}</p>
+              </div>
+            </div>
+            
+            <div class="detail-grid">
+              <div><strong>Date:</strong> ${DateUtils.formatDate(appointment.date)}</div>
+              <div><strong>Time:</strong> ${appointment.time}</div>
+              <div><strong>Duration:</strong> ${appointment.duration} minutes</div>
+              <div><strong>Status:</strong> <span class="badge badge-success">${appointment.status}</span></div>
+            </div>
+
+            ${appointment.notes ? `<div class="mt-2"><strong>Notes:</strong><p>${appointment.notes}</p></div>` : ''}
+
+            <div style="margin-top: 1.5rem;">
+              <strong>Therapist Contact:</strong>
+              <p>📧 ${therapist.email}</p>
+              <p>📞 ${therapist.phone}</p>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button onclick="closeViewModal()" class="btn btn-outline">Close</button>
+          </div>
+        `;
+
+        document.getElementById('viewModal').style.display = 'block';
+      } catch (error) {
+        console.error('Error viewing appointment:', error);
+        alert('Failed to load appointment details');
+      }
+    }
+
+    function closeViewModal() {
+      document.getElementById('viewModal').style.display = 'none';
+    }
+
+    async function rescheduleAppointment(appointmentId) {
+      alert('Reschedule functionality: Coming soon! For now, please cancel and book a new appointment.');
+    }
+
+    async function cancelAppointment(appointmentId) {
+      if (!confirm('Are you sure you want to cancel this appointment?')) return;
+
+      try {
+        const result = await AppointmentManager.cancelAppointment(appointmentId);
+
+        if (result.success) {
+          UIUtils.showNotification('Appointment cancelled', 'success');
+          await loadAllAppointments();
+        } else {
+          UIUtils.showNotification(result.message, 'error');
+        }
+      } catch (error) {
+        console.error('Error cancelling appointment:', error);
+        alert('Failed to cancel appointment');
+      }
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.tab === tabName) btn.classList.add('active');
+      });
+
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+    }
+
+    async function handleLogout() {
+      if (confirm('Are you sure you want to logout?')) {
+        await Auth.logout();
+      }
+    }
+  </script>
+
+  <style>
+    .appointment-cards {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .appointment-card {
+      border-left: 4px solid var(--primary-green);
+    }
+
+    .appointment-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .therapist-thumb {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .appointment-card-body {
+      margin-bottom: 1rem;
+    }
+
+    .appointment-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .appointment-notes {
+      background-color: var(--bg-light);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      margin-top: 1rem;
+    }
+
+    .appointment-card-footer {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .time-slots {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.75rem;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 0.5rem;
+      background-color: var(--bg-light);
+      border-radius: var(--border-radius);
+    }
+
+    .time-slot-btn {
+      padding: 0.75rem;
+      border: 2px solid var(--border-color);
+      background-color: white;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+
+    .time-slot-btn:hover {
+      border-color: var(--primary-green);
+      background-color: var(--light-green);
+    }
+
+    .time-slot-btn.selected {
+      background-color: var(--primary-green);
+      color: white;
+      border-color: var(--primary-green);
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      padding: 1rem;
+      background-color: var(--bg-light);
+      border-radius: var(--border-radius);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+    }
+
+    .modal-close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .modal-close:hover,
+    .modal-close:focus {
+      color: black;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .appointment-info-grid,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .appointment-card-footer {
+        flex-direction: column;
+      }
+
+      .time-slots {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</body>
+</html>

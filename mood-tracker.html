@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mood Tracker - MindSpace</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <style>
+    .mood-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Mood Selector */
+    .mood-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .mood-option {
+      text-align: center;
+      padding: 1.5rem 0.5rem;
+      border: 2px solid var(--border-color);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      background-color: white;
+    }
+
+    .mood-option:hover {
+      border-color: var(--primary-green);
+      background-color: var(--light-green);
+      transform: translateY(-3px);
+    }
+
+    .mood-option.selected {
+      border-color: var(--primary-green);
+      background-color: var(--light-green);
+      box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+    }
+
+    .mood-emoji {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .mood-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-top: 0.5rem;
+    }
+
+    /* Intensity Slider */
+    .intensity-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .slider {
+      flex: 1;
+      height: 8px;
+      border-radius: 5px;
+      background: linear-gradient(to right, #DC3545 0%, #FFC107 50%, #52B788 100%);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary-green);
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary-green);
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      border: none;
+    }
+
+    .intensity-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-green);
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .intensity-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    /* Insights */
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .insight-card {
+      text-align: center;
+      padding: 1.5rem;
+      background-color: var(--bg-light);
+      border-radius: var(--border-radius);
+    }
+
+    .insight-card h4 {
+      font-size: 0.875rem;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .recommendation-box {
+      background: linear-gradient(135deg, var(--light-green) 0%, var(--bg-light) 100%);
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      border-left: 4px solid var(--primary-green);
+      margin-top: 1rem;
+    }
+
+    /* Filter Buttons */
+    .filter-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid var(--border-color);
+      background-color: white;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .filter-btn:hover {
+      border-color: var(--primary-green);
+    }
+
+    .filter-btn.active {
+      background-color: var(--primary-green);
+      color: white;
+      border-color: var(--primary-green);
+    }
+
+    /* Mood Timeline */
+    .mood-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .mood-entry {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      background-color: var(--bg-light);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      border-left: 4px solid var(--primary-green);
+    }
+
+    .mood-entry:hover {
+      background-color: var(--light-green);
+      transform: translateX(5px);
+    }
+
+    .mood-entry-date {
+      flex-shrink: 0;
+    }
+
+    .date-box {
+      width: 60px;
+      text-align: center;
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 0.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .date-day {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-green);
+    }
+
+    .date-month {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      text-transform: uppercase;
+    }
+
+    .mood-entry-content {
+      flex: 1;
+    }
+
+    .mood-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .mood-entry-emoji {
+      font-size: 1.5rem;
+      margin-right: 0.5rem;
+    }
+
+    .mood-entry-notes {
+      color: var(--text-medium);
+      font-size: 0.9rem;
+      margin: 0.5rem 0;
+      line-height: 1.5;
+    }
+
+    .mood-entry-time {
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 30px;
+      border: 1px solid #888;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal-close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      line-height: 20px;
+    }
+
+    .modal-close:hover,
+    .modal-close:focus {
+      color: black;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .mood-selector {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .insights-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .filter-buttons {
+        flex-wrap: wrap;
+      }
+
+      .mood-entry {
+        flex-direction: column;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧠 MindSpace</h2>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="therapists.html" class="nav-item">
+          <span class="nav-icon">👨‍⚕️</span>
+          <span>My Therapists</span>
+        </a>
+        <a href="appointments.html" class="nav-item">
+          <span class="nav-icon">📅</span>
+          <span>Appointments</span>
+        </a>
+        <a href="mood-tracker.html" class="nav-item active">
+          <span class="nav-icon">😊</span>
+          <span>Mood Tracker</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+          <span class="nav-icon">👤</span>
+          <span>Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="logoutBtn" class="btn btn-outline btn-block">
+          <span>🚪 Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <h1>Mood Tracker</h1>
+        </div>
+        <div class="top-bar-right">
+          <button id="logMoodBtn" class="btn btn-primary">
+            + Log Today's Mood
+          </button>
+        </div>
+      </header>
+
+      <!-- Mood Tracker Content -->
+      <div class="dashboard-content">
+        <!-- Stats Overview -->
+        <div class="mood-stats-grid">
+          <div class="stat-card card">
+            <div class="stat-icon" style="background-color: var(--secondary-green);">📝</div>
+            <div class="stat-info">
+              <h3 id="totalEntries">0</h3>
+              <p>Total Entries</p>
+            </div>
+          </div>
+
+          <div class="stat-card card">
+            <div class="stat-icon" style="background-color: #52B788;">📈</div>
+            <div class="stat-info">
+              <h3 id="currentStreak">0</h3>
+              <p>Day Streak</p>
+            </div>
+          </div>
+
+          <div class="stat-card card">
+            <div class="stat-icon" style="background-color: #95D5B2;">😊</div>
+            <div class="stat-info">
+              <h3 id="avgMood">-</h3>
+              <p>Avg Intensity</p>
+            </div>
+          </div>
+
+          <div class="stat-card card">
+            <div class="stat-icon" style="background-color: #B7E4C7;">📊</div>
+            <div class="stat-info">
+              <h3 id="moodTrend">-</h3>
+              <p>Trend</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mood Insights Card -->
+        <div class="card">
+          <h3>Your Mood Insights</h3>
+          <div id="moodInsights" class="insights-container">
+            <p class="text-muted">Log your moods to see insights...</p>
+          </div>
+        </div>
+
+        <!-- Mood History -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Mood History</h3>
+            <div class="filter-buttons">
+              <button class="filter-btn active" data-filter="all">All Time</button>
+              <button class="filter-btn" data-filter="week">This Week</button>
+              <button class="filter-btn" data-filter="month">This Month</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="moodHistory">
+              <p class="text-center text-muted">Loading mood history...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Log Mood Modal -->
+  <div id="logMoodModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close">&times;</span>
+      <h2>Log Your Mood</h2>
+      
+      <form id="logMoodForm">
+        <div class="form-group">
+          <label>How are you feeling today? *</label>
+          <div class="mood-selector" id="moodSelector">
+            <!-- Moods will be dynamically loaded -->
+          </div>
+          <div id="moodError" class="error-message"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="intensitySlider">Intensity (1-10) *</label>
+          <div class="intensity-container">
+            <input type="range" id="intensitySlider" min="1" max="10" value="5" class="slider">
+            <span id="intensityValue" class="intensity-value">5</span>
+          </div>
+          <div class="intensity-labels">
+            <span>Very Low</span>
+            <span>Moderate</span>
+            <span>Very High</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="moodNotes">What's on your mind? (Optional)</label>
+          <textarea id="moodNotes" rows="4" placeholder="Describe what you're feeling or what triggered this mood..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="moodDate">Date *</label>
+          <input type="date" id="moodDate" required>
+        </div>
+
+        <div id="formError" class="error-message"></div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Save Mood</button>
+          <button type="button" onclick="closeLogMoodModal()" class="btn btn-outline">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Mood Details Modal -->
+  <div id="viewMoodModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeViewMoodModal()">&times;</span>
+      <div id="moodDetails"></div>
+    </div>
+  </div>
+
+  <script src="js/db.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/mood-tracker.js"></script>
+  <script>
+    let currentUser = null;
+    let selectedMood = null;
+    let currentFilter = 'all';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // CRITICAL: Wait for database to be ready first
+      try {
+        await window.dbReadyPromise;
+      } catch (error) {
+        console.error('Failed to initialize database:', error);
+        alert('Database initialization failed. Please refresh the page.');
+        return;
+      }
+
+      // Check authentication
+      const isAuth = await Auth.requireAuth();
+      if (!isAuth) return;
+
+      // Get current user
+      currentUser = await Auth.getCurrentUser();
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Initialize
+      await loadMoodData();
+      loadMoodSelector();
+
+      // Event listeners
+      document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+      document.getElementById('logMoodBtn').addEventListener('click', openLogMoodModal);
+      document.getElementById('logMoodForm').addEventListener('submit', handleLogMood);
+      document.getElementById('intensitySlider').addEventListener('input', updateIntensityDisplay);
+
+      // Filter buttons
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentFilter = btn.dataset.filter;
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          loadMoodHistory(currentFilter);
+        });
+      });
+
+      // Modal close
+      document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.addEventListener('click', () => {
+          closeLogMoodModal();
+          closeViewMoodModal();
+        });
+      });
+
+      window.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+          closeLogMoodModal();
+          closeViewMoodModal();
+        }
+      });
+
+      // Set default date to today
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('moodDate').value = today;
+      document.getElementById('moodDate').max = today;
+    });
+
+    function loadMoodSelector() {
+      const container = document.getElementById('moodSelector');
+      container.innerHTML = MoodUtils.moodCategories.map(mood => `
+        <div class="mood-option ${selectedMood === mood.name ? 'selected' : ''}" 
+             onclick="selectMood('${mood.name}')"
+             data-mood="${mood.name}">
+          <span class="mood-emoji">${mood.emoji}</span>
+          <div class="mood-name">${mood.name}</div>
+        </div>
+      `).join('');
+    }
+
+    function selectMood(moodName) {
+      selectedMood = moodName;
+      document.querySelectorAll('.mood-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.dataset.mood === moodName) {
+          opt.classList.add('selected');
+        }
+      });
+      UIUtils.clearError('moodError');
+    }
+
+    function updateIntensityDisplay() {
+      const value = document.getElementById('intensitySlider').value;
+      document.getElementById('intensityValue').textContent = value;
+    }
+
+    async function loadMoodData() {
+      try {
+        const stats = await MoodTracker.getMoodStats(currentUser.id);
+        
+        document.getElementById('totalEntries').textContent = stats.totalEntries;
+        document.getElementById('currentStreak').textContent = stats.currentStreak;
+        document.getElementById('avgMood').textContent = stats.avgIntensity || '-';
+        
+        const trendText = stats.trend === 'improving' ? '📈 Improving' :
+                         stats.trend === 'declining' ? '📉 Declining' : '➡️ Stable';
+        document.getElementById('moodTrend').textContent = trendText;
+
+        // Load insights
+        await loadMoodInsights();
+        
+        // Load history
+        await loadMoodHistory('all');
+      } catch (error) {
+        console.error('Error loading mood data:', error);
+      }
+    }
+
+    async function loadMoodInsights() {
+      try {
+        const insights = await MoodTracker.getMoodInsights(currentUser.id);
+        const container = document.getElementById('moodInsights');
+
+        if (!insights || insights.totalMoods === 0) {
+          container.innerHTML = '<p class="text-muted">Log your moods to see insights...</p>';
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="insights-grid">
+            <div class="insight-card">
+              <h4>Most Common Mood</h4>
+              <div style="font-size: 3rem; margin: 0.5rem 0;">${insights.mostCommon.emoji}</div>
+              <p><strong>${insights.mostCommon.name}</strong></p>
+              <p class="text-muted">${insights.mostCommon.count} times</p>
+            </div>
+            
+            <div class="insight-card">
+              <h4>Average Intensity</h4>
+              <div style="font-size: 2.5rem; margin: 1rem 0; color: ${insights.avgIntensity > 7 ? '#52B788' : insights.avgIntensity > 4 ? '#FFC107' : '#DC3545'};">
+                ${insights.avgIntensity}/10
+              </div>
+            </div>
+
+            <div class="insight-card">
+              <h4>Recent Trend</h4>
+              <div style="font-size: 3rem; margin: 0.5rem 0;">
+                ${insights.trend === 'improving' ? '📈' : insights.trend === 'declining' ? '📉' : '➡️'}
+              </div>
+              <p><strong>${insights.trend === 'improving' ? 'Improving' : insights.trend === 'declining' ? 'Declining' : 'Stable'}</strong></p>
+            </div>
+
+            <div class="insight-card">
+              <h4>Entries This Week</h4>
+              <div style="font-size: 2.5rem; margin: 1rem 0;">📅 ${insights.weekEntries}</div>
+            </div>
+          </div>
+
+          ${insights.recommendation ? `
+            <div class="recommendation-box">
+              <strong>💡 Suggestion:</strong> ${insights.recommendation}
+            </div>
+          ` : ''}
+        `;
+      } catch (error) {
+        console.error('Error loading insights:', error);
+      }
+    }
+
+    async function loadMoodHistory(filter) {
+      try {
+        const container = document.getElementById('moodHistory');
+        let moods = await MoodTracker.getMoodHistory(currentUser.id);
+
+        // Apply filter
+        if (filter === 'week') {
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          moods = moods.filter(m => new Date(m.date) >= weekAgo);
+        } else if (filter === 'month') {
+          const monthAgo = new Date();
+          monthAgo.setMonth(monthAgo.getMonth() - 1);
+          moods = moods.filter(m => new Date(m.date) >= monthAgo);
+        }
+
+        if (moods.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state" style="text-align: center; padding: 3rem;">
+              <div style="font-size: 4rem; margin-bottom: 1rem;">😊</div>
+              <h3>No Mood Entries Yet</h3>
+              <p class="text-muted">Start tracking your emotions to see patterns</p>
+              <button onclick="openLogMoodModal()" class="btn btn-primary mt-2">Log Your First Mood</button>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="mood-timeline">
+            ${moods.map(mood => {
+              const moodData = MoodUtils.getMoodByName(mood.mood);
+              return `
+                <div class="mood-entry" onclick="viewMoodDetails(${mood.id})">
+                  <div class="mood-entry-date">
+                    <div class="date-box">
+                      <div class="date-day">${new Date(mood.date).getDate()}</div>
+                      <div class="date-month">${new Date(mood.date).toLocaleString('default', { month: 'short' })}</div>
+                    </div>
+                  </div>
+                  <div class="mood-entry-content">
+                    <div class="mood-entry-header">
+                      <div>
+                        <span class="mood-entry-emoji">${moodData.emoji}</span>
+                        <strong>${mood.mood}</strong>
+                      </div>
+                      <span class="intensity-badge" style="background-color: ${moodData.color};">
+                        ${mood.intensity}/10
+                      </span>
+                    </div>
+                    ${mood.notes ? `<p class="mood-entry-notes">${mood.notes.substring(0, 100)}${mood.notes.length > 100 ? '...' : ''}</p>` : ''}
+                    <div class="mood-entry-time">${DateUtils.formatTime(mood.timestamp)}</div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error loading mood history:', error);
+      }
+    }
+
+    function openLogMoodModal() {
+      selectedMood = null;
+      document.getElementById('intensitySlider').value = 5;
+      updateIntensityDisplay();
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('moodDate').value = today;
+      document.getElementById('moodNotes').value = '';
+      loadMoodSelector();
+      document.getElementById('logMoodModal').style.display = 'block';
+    }
+
+    function closeLogMoodModal() {
+      document.getElementById('logMoodModal').style.display = 'none';
+      document.getElementById('logMoodForm').reset();
+      selectedMood = null;
+    }
+
+    async function handleLogMood(e) {
+      e.preventDefault();
+      UIUtils.clearError('moodError');
+      UIUtils.clearError('formError');
+
+      if (!selectedMood) {
+        UIUtils.showError('moodError', 'Please select a mood');
+        return;
+      }
+
+      try {
+        const moodData = {
+          mood: selectedMood,
+          intensity: parseInt(document.getElementById('intensitySlider').value),
+          notes: document.getElementById('moodNotes').value.trim(),
+          date: document.getElementById('moodDate').value
+        };
+
+        const result = await MoodTracker.logMood(currentUser.id, moodData);
+
+        if (result.success) {
+          UIUtils.showNotification('Mood logged successfully!', 'success');
+          closeLogMoodModal();
+          await loadMoodData();
+        } else {
+          UIUtils.showError('formError', result.message);
+        }
+      } catch (error) {
+        console.error('Error logging mood:', error);
+        UIUtils.showError('formError', 'Failed to log mood. Please try again.');
+      }
+    }
+
+    async function viewMoodDetails(moodId) {
+      try {
+        const mood = await mindspaceDB.get('moods', moodId);
+        const moodData = MoodUtils.getMoodByName(mood.mood);
+
+        document.getElementById('moodDetails').innerHTML = `
+          <div class="mood-detail-view">
+            <div class="mood-detail-header" style="text-align: center; padding: 2rem; background: linear-gradient(135deg, ${moodData.color}22 0%, ${moodData.color}44 100%); border-radius: var(--border-radius); margin-bottom: 2rem;">
+              <div style="font-size: 5rem; margin-bottom: 1rem;">${moodData.emoji}</div>
+              <h2 style="margin: 0;">${mood.mood}</h2>
+              <p style="font-size: 1.25rem; margin: 0.5rem 0;">Intensity: ${mood.intensity}/10</p>
+              <p class="text-muted">${DateUtils.formatDateTime(mood.timestamp)}</p>
+            </div>
+
+            ${mood.notes ? `
+              <div style="margin-bottom: 2rem;">
+                <h3>Notes</h3>
+                <div style="background-color: var(--bg-light); padding: 1.5rem; border-radius: var(--border-radius); border-left: 4px solid ${moodData.color};">
+                  ${mood.notes}
+                </div>
+              </div>
+            ` : ''}
+
+            <div class="modal-actions">
+              <button onclick="deleteMood(${mood.id})" class="btn" style="background-color: #DC3545; color: white;">Delete Entry</button>
+              <button onclick="closeViewMoodModal()" class="btn btn-outline">Close</button>
+            </div>
+          </div>
+        `;
+
+        document.getElementById('viewMoodModal').style.display = 'block';
+      } catch (error) {
+        console.error('Error viewing mood:', error);
+        alert('Failed to load mood details');
+      }
+    }
+
+    function closeViewMoodModal() {
+      document.getElementById('viewMoodModal').style.display = 'none';
+    }
+
+    async function deleteMood(moodId) {
+      if (!confirm('Are you sure you want to delete this mood entry?')) return;
+
+      try {
+        const result = await MoodTracker.deleteMood(moodId);
+        
+        if (result.success) {
+          UIUtils.showNotification('Mood entry deleted', 'success');
+          closeViewMoodModal();
+          await loadMoodData();
+        } else {
+          UIUtils.showNotification(result.message, 'error');
+        }
+      } catch (error) {
+        console.error('Error deleting mood:', error);
+        alert('Failed to delete mood entry');
+      }
+    }
+
+    async function handleLogout() {
+      if (confirm('Are you sure you want to logout?')) {
+        await Auth.logout();
+      }
+    }
+  </script>
+</body>
+</html>
